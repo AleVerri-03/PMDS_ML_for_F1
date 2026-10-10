@@ -71,6 +71,6 @@ The other scripts are added to this folder at the start of the lesson: run `git 
 | Script | What it does | Time |
 |---|---|---|
 | `check_setup.py` | environment check | about 10 s |
-| `audit_replication.py` | five checks on the paper's data (the CSVs in the repository root) | a few s |
+| `audit_replication.py` | five checks on the paper's data (the CSVs in the repository root); run `python course/L1/audit_replication.py` | a few s |
 | `lab_l2_residual.py` | residual of an exact solution, autograd vs finite differences | about 2 s |
 | `demo_l2_pinn_1d.py` | a PINN for 1D diffusion, no data | about 30 s on CPU |

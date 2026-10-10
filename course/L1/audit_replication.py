@@ -11,9 +11,12 @@ This script runs five independent checks. Each one is self-contained and prints
 its own verdict. Students should run it, then re-derive every number by hand
 before reading the conclusions.
  
-Usage:
-    git clone https://github.com/NavalShah/F1-Front-Wing-Physics-Informed-NN.git
-    python audit_replication.py --data-dir F1-Front-Wing-Physics-Informed-NN
+Usage (from the root of this repository, or from any other folder):
+    python course/L1/audit_replication.py
+    python course/L1/audit_replication.py --plot
+
+The three CSVs are read from the repository root. To use another copy of the
+data, pass --data-dir PATH.
  
 Requires: numpy, pandas, scikit-learn, matplotlib (optional, for --plot)
 """
@@ -263,10 +266,14 @@ def maybe_plot(coeff, outdir):
     print(f"\n[wrote {path}]")
  
  
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data-dir", default=".",
-                    help="directory containing the three CSVs from the paper's repo")
+    ap.add_argument("--data-dir", default=REPO_ROOT,
+                    help="directory containing the three CSVs (default: repository root)")
     ap.add_argument("--plot", action="store_true", help="also write a PNG of Cd/Cl history")
     args = ap.parse_args()
  
@@ -274,8 +281,7 @@ def main():
         coeff, forces, moments, X, y = load(args.data_dir)
     except FileNotFoundError as e:
         sys.exit(f"Could not find the data: {e}\n"
-                 f"Clone https://github.com/NavalShah/F1-Front-Wing-Physics-Informed-NN "
-                 f"and pass --data-dir")
+                 f"Expected the three CSVs in {args.data_dir}. Run `git pull` or pass --data-dir.")
  
     print("CRITICAL REPLICATION OF arXiv:2509.01963")
     print("Polimi Data Scientists - F1 PINN project, Phase 1-2")
@@ -287,7 +293,7 @@ def main():
     check_evaluation_protocol(X, y)
  
     if args.plot:
-        maybe_plot(coeff, args.data_dir if os.access(args.data_dir, os.W_OK) else ".")
+        maybe_plot(coeff, SCRIPT_DIR)
  
     print("\n" + "=" * 78)
     print("SUMMARY OF DEFECTS")
