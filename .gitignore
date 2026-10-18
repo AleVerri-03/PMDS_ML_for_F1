@@ -2,3 +2,6 @@
 Dataset/
 Dataset.zip
 *.zip
+
+# Campioni AirfRANS scaricati con course/_instructor/shape_input/fetch_airfrans_samples.py (per ora fuori da git)
+data/airfrans_samples/
