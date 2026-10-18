@@ -22,7 +22,7 @@ import sys
 print(f"python    {platform.python_version()}  ({platform.system()} {platform.machine()})")
 
 failed = []
-for name in ["numpy", "pandas", "sklearn", "matplotlib", "joblib", "torch"]:
+for name in ["numpy", "pandas", "sklearn", "matplotlib", "torch"]:
     try:
         mod = importlib.import_module(name)
         print(f"{name:<9} {mod.__version__}")
