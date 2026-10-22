@@ -1,0 +1,14 @@
+DATA  40 training points (alpha between -5 and 20 deg), 201 validation points
+MODEL 1 -> 32 -> 32 -> 1, tanh, input x = alpha/10, 3000 steps
+PHYSICS  slope, lambda = 1
+  target: dCl/dalpha = 2*pi = 6.28 per radian; in network units dCl/dx = 2*pi*pi/18 = 1.10
+
+seed  validation MSE  slope at 2 deg
+   0          0.0001            6.30
+   1          0.0004            6.28
+   2          0.0003            6.28
+   3          0.0005            6.29
+   4          0.0003            6.28
+
+SUMMARY  slope: validation MSE 0.0003 +- 0.0001 over 5 seeds   (slope at 2 deg 6.29 per rad, theory 6.28)
+(1369 s)

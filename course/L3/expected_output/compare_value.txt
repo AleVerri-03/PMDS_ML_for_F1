@@ -1,0 +1,14 @@
+DATA  6 training points (alpha between -5 and 20 deg), 201 validation points
+MODEL 1 -> 32 -> 32 -> 1, tanh, input x = alpha/10, 3000 steps
+PHYSICS  value (Lesson 1), lambda = 1
+
+seed  validation MSE  slope at 2 deg     alone  helps
+   0          0.0016            6.08    0.0083    yes
+   1          0.0103            6.15    0.0098     no
+   2          0.0002            6.37    0.0060    yes
+   3          0.0015            6.20    0.0087    yes
+   4          0.0011            6.57    0.0033    yes
+
+SUMMARY  value (Lesson 1): validation MSE 0.0029 +- 0.0041 over 5 seeds   (slope at 2 deg 6.27 per rad, theory 6.28)
+         network alone:  validation MSE 0.0072 +- 0.0026   -> the constraint helps in 4 of 5 seeds
+(40 s)

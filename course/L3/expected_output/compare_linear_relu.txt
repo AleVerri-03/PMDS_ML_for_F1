@@ -1,0 +1,15 @@
+DATA  6 training points (alpha between -5 and 20 deg), 201 validation points
+MODEL 1 -> 32 -> 32 -> 1, relu, input x = alpha/10, 3000 steps
+PHYSICS  linearity, lambda = 1
+
+seed  validation MSE  slope at 2 deg     alone  helps
+   0          0.0021            6.87    0.0021   same
+   1          0.0264            6.62    0.0264   same
+   2          0.0062            8.40    0.0062   same
+   3          0.0190            5.40    0.0190   same
+   4          0.0007            6.60    0.0007   same
+
+SUMMARY  linearity: validation MSE 0.0109 +- 0.0113 over 5 seeds   (slope at 2 deg 6.78 per rad, theory 6.28)
+         network alone:  validation MSE 0.0109 +- 0.0113   -> the constraint helps in 0 of 5 seeds
+         identical to the network alone: the physics term gives no gradient (ReLU: second derivative = 0)
+(46 s)

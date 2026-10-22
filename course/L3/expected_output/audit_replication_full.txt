@@ -1,0 +1,132 @@
+CRITICAL REPLICATION OF arXiv:2509.01963
+Polimi Data Scientists - F1 PINN project, Phase 1-2
+
+==============================================================================
+CHECK 1: What does the dataset actually contain?
+==============================================================================
+Rows in each CSV               : 5000
+Index column                   : 'Time (s)' (range 1 .. 5000, step 1)
+Coefficient columns available  : ['FORCE_COEFFICIENT_CD', 'FORCE_COEFFICIENT_CL', 'FORCE_COEFFICIENT_CLF', 'FORCE_COEFFICIENT_CLR', 'FORCE_COEFFICIENT_CM']
+  -> the paper uses only 2 of these 5; CLF/CLR (front/rear lift split) and CM are discarded.
+
+History of Cd over the integer counter in the 'Time (s)' column (solver iterations, not a set of designs):
+  first 10 rows  : [0.5023 0.7028 0.4512 0.1004 0.0244 0.255  0.549  0.6701 0.5793 0.4199]
+  last  10 rows  : [0.32379 0.32371 0.32364 0.32361 0.32363 0.32373 0.32387 0.32402 0.32416
+ 0.32428]
+
+  Cd  full range   : mean 0.32730  std 0.01420
+  Cd  rows  >2000  : mean 0.32490  std 0.00141
+  Cl  rows  >2000  : mean -1.56861  std 0.00852
+
+VERDICT: all 5000 rows come from ONE simulation of
+ONE geometry, converging to a single operating point (the counter is 1, 2, 3, ...
+in unit steps: most likely solver iterations of a steady run, not physical time). There is no
+geometric variation anywhere in the data. The paper's abstract describes
+'12 aerodynamic features' -- these are the 12 input COLUMNS, not 12
+configurations. A surrogate trained on this cannot explore a design
+space, because it has never seen a second design.
+
+==============================================================================
+CHECK 2: Are the inputs and the targets the same quantity?
+==============================================================================
+max |PRESSURE_X + VISCOUS_X - TOTAL_X| = 1.000e-11
+max |PRESSURE_Y + VISCOUS_Y - TOTAL_Y| = 9.859e-11
+  -> total force is exactly the sum of two of the 12 input features.
+
+Fx / Cd : mean -132.941786   std 1.4619e-11   rel.std 1.10e-13
+Fy / Cl : mean +132.941786   std 3.0151e-11   rel.std 2.27e-13
+
+VERDICT: the ratio is constant to ~1e-13, i.e. to floating-point
+precision. Cd and Cl are not physical quantities to be *predicted* from
+the forces -- they are the forces, divided by a fixed constant. The
+'learning' task is a division by a scalar.
+
+==============================================================================
+CHECK 3: The baseline the paper never ran
+==============================================================================
+Ordinary least squares, 12 inputs -> 2 outputs, same 80/20 split.
+Model complexity: 26 parameters. Training time: milliseconds. CPU only.
+
+                              R2 (Cd)        R2 (Cl)     MSE (Cd)     MSE (Cl)
+paper PINN (12,066 p)         0.96753        0.98102        0.031        0.024
+linear reg. (26 p)       1.0000000000   1.0000000000     1.33e-27      1.3e-25
+
+Recovered coefficients for Cd (should be ~1/k on the two X-force inputs):
+    PRESSURE_FORCE_X     -7.52208943e-03
+    VISCOUS_FORCE_X      -7.52208943e-03
+
+VERDICT: R2 = 1.0 to ten decimal places, MSE at the level of numerical
+noise. The 12,066-parameter 'PINN' does measurably WORSE than ordinary
+least squares on a problem whose exact solution is linear. Reporting
+R2 = 0.968 as a success is only possible if no baseline was ever run.
+
+==============================================================================
+CHECK 4: Is the physics-informed loss physically correct?
+==============================================================================
+The paper writes the constraint as   F = 0.5 * rho * V^2 * C
+The definition of a force coefficient is  F = 0.5 * rho * V^2 * A * C
+                                                              ^^^
+The reference area A is missing. Check the units:
+  0.5 * rho * V^2        -> [kg/m^3][m^2/s^2] = kg/(m s^2) = Pa
+  a force               -> N = kg m/s^2
+  Pa != N, so the stated equation cannot be dimensionally valid.
+
+Constant hardcoded in the paper's loss : 0.5*1.225*50.0^2 = 1531.2500
+Constant actually present in the data  : 132.9418
+Ratio (paper / data)                  : 11.5182x
+
+Solving 0.5 * rho * V^2 * A = k_true for the two unknowns:
+  if A = 1.00 m^2 (unit reference area) -> V = 14.73 m/s (53 km/h)
+  if V = 50 m/s (as claimed)            -> A = 0.0868 m^2
+  An F1 front wing reference area is order 1 m^2, so V = 50 m/s is
+  inconsistent with this data by roughly an order of magnitude.
+
+VERDICT: the physics term penalises the network by a factor 11.5x away from
+the true relation. It does not encode physics -- it encodes a wrong
+constant, and it actively pulls the prediction away from the correct
+answer. The reported lambda_phys = 0.1 is what keeps the damage small.
+
+Separately: there is no call to torch.autograd.grad anywhere in main.py.
+No derivative of the network is ever taken with respect to its inputs, so
+no PDE residual is ever formed. By the definition in Raissi et al. (2019)
+this model is not a physics-informed neural network. It is a multilayer
+perceptron with an algebraic penalty term.
+
+==============================================================================
+CHECK 5: Does the train/validation protocol measure generalisation?
+==============================================================================
+Lag-1 autocorrelation of Cd across timesteps: 0.779904
+Adjacent rows are near-duplicates of each other. A uniformly random
+80/20 split therefore places, for almost every validation row, its two
+immediate neighbours in the training set.
+
+Distance (in timesteps) from each validation row to the nearest
+training row:  mean 1.045   max 4   share at distance 1: 96.1%
+
+The paper states the split was stratified to preserve the distribution
+of force magnitudes. main.py line 133 calls train_test_split(indices,
+test_size=0.2, random_state=42) with no `stratify` argument. The stated
+protocol is not the implemented one.
+
+Finally, main.py lines 229-233 fit a LinearRegression calibration on
+y_pred_all / y_true_all -- the FULL dataset, validation rows included --
+and the paper reports the resulting improvement as a result. Any metric
+computed after that step is fitted on its own test set.
+
+VERDICT: three compounding protocol errors. Even if the task were not
+trivial, the reported numbers would not measure generalisation.
+
+==============================================================================
+SUMMARY OF DEFECTS
+==============================================================================
+D1  Dataset is one simulation of one geometry; no design variation.
+D2  Targets are the inputs divided by a constant (exact to ~1e-13).
+D3  A 26-parameter linear model reaches R2 = 1.0; the network gets 0.968.
+D4  Physics term omits the reference area and is wrong by ~11.5x.
+D5  No autograd-based PDE residual: the model is not a PINN.
+D6  Random split on autocorrelated timesteps + calibration fitted on
+    the test set: reported metrics do not measure generalisation.
+
+None of this means the research direction is wrong. Surrogate models for
+aerodynamic design ARE valuable and PINNs ARE a real method. It means the
+paper does not provide evidence for either. Our project supplies it.

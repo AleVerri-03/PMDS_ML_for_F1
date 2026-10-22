@@ -1,0 +1,13 @@
+DATA  6 training points (alpha between -5 and 20 deg), 201 validation points
+MODEL 1 -> 32 -> 32 -> 1, tanh, input x = alpha/10, 3000 steps
+PHYSICS  network alone
+
+seed  validation MSE  slope at 2 deg
+   0          0.0083            7.04
+   1          0.0098            6.46
+   2          0.0060            8.14
+   3          0.0087            5.54
+   4          0.0033            6.57
+
+SUMMARY  network alone: validation MSE 0.0072 +- 0.0026 over 5 seeds   (slope at 2 deg 6.75 per rad, theory 6.28)
+(19 s)
