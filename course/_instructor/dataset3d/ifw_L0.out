@@ -1,0 +1,61 @@
+wing.stl: OK
+nose.stl: OK
+hanger.stl: OK
+== case ../../../data/frontwing_runs3d/ifw_L0_np6_20261104T180753Z
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+case ../../../data/frontwing_runs3d/ifw_L0_np6_20261104T180753Z: IFW level L0, d0 0.1 m, background 29700 cells
+== mesh + solve (6 ranks); progress: tail -f ../../../data/frontwing_runs3d/ifw_L0_np6_20261104T180753Z/log.Allrun
+OpenFOAM v2606, 6 ranks, 20 cpus visible
+[18:07:55] surfaceFeatureExtract: 2 s (rc 0)
+[18:07:56] blockMesh: 0 s (rc 0)
+[18:07:56] decomposePar: 0 s (rc 0)
+[18:13:12] snappyHexMesh: 316 s (rc 0)
+[18:13:14] checkMesh: 1 s (rc 0)
+[18:13:14] restore0Dir: 0 s (rc 0)
+[19:28:28] simpleFoam: 4514 s (rc 0)
+[19:28:28] done
+== report
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+    "drift_pct": -1.1647279149926628
+   },
+   "Cd": {
+    "mean": -0.00066733674229786,
+    "amp_pct": 64.37856904381896,
+    "drift_pct": -2.2117415234199895
+   }
+  },
+  "coeffs_hanger": {
+   "Cl": {
+    "mean": -0.0051901718565414,
+    "amp_pct": 29.480510231497668,
+    "drift_pct": -2.6318814270829765
+   },
+   "Cd": {
+    "mean": 0.00118738705520304,
+    "amp_pct": 20.433135720728618,
+    "drift_pct": 3.4245507797764163
+   }
+  }
+ },
+ "coeffs_ok": true,
+ "compare": {
+  "CL_3D": 5.389436371620199,
+  "CD_3D": 0.59387586318704,
+  "CL_ref": 5.54,
+  "CD_ref": 0.575,
+  "CL_rel_diff_pct": -2.7177550249061433,
+  "CD_rel_diff_pct": 3.2827588151373988,
+  "ref_source": "Buscariolo et al., J. Wind Eng. Ind. Aerodyn. 2022 (arXiv 1909.06701), Nektar++ NM54, Re 2.2e5, Aref = 0.25 x 0.70 m2; patches included in the paper's coefficient not stated"
+ },
+ "projection": {
+  "hours_per_case": 1.3431111111111111,
+  "cases_per_day": 17.86896095301125,
+  "days_for_20_cases": 1.1192592592592592,
+  "days_for_80_cases": 4.477037037037037,
+  "days_for_160_cases": 8.954074074074073,
+  "days_for_400_cases": 22.385185185185183
+ }
+}
+report: ../../../data/frontwing_runs3d/ifw_L0_np6_20261104T180753Z/report3d.json, ../../../data/frontwing_runs3d/ifw_L0_np6_20261104T180753Z/report3d.png

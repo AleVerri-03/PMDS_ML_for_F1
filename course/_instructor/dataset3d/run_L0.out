@@ -1,0 +1,58 @@
+== case ../../../data/frontwing_runs3d/zerihan3d_L0_h0.211_np6_20261103T150218Z
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+case ../../../data/frontwing_runs3d/zerihan3d_L0_h0.211_np6_20261103T150218Z: level L0, d0 0.075 m, background 45333 cells, endplate clearance 67.5 mm
+== mesh + solve in the container (6 ranks); progress: tail -f ../../../data/frontwing_runs3d/zerihan3d_L0_h0.211_np6_20261103T150218Z/log.Allrun
+OpenFOAM v2606, 6 ranks, 20 cpus visible
+[15:02:20] surfaceFeatureExtract: 0 s (rc 0)
+[15:02:20] blockMesh: 0 s (rc 0)
+[15:02:20] decomposePar: 0 s (rc 0)
+[15:05:42] snappyHexMesh: 201 s (rc 0)
+[15:05:43] checkMesh: 1 s (rc 0)
+[15:05:43] restore0Dir: 0 s (rc 0)
+[16:33:07] simpleFoam: 5243 s (rc 0)
+[16:33:07] done
+== report
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+<frozen site>:101: RuntimeWarning: Unexpected value in sys.exec_prefix, expected /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset/.venv, got /home/verri/Documents/GitHub/F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/../dataset/.venv
+   "Cl": {
+    "mean": 0.56548314011876,
+    "amp_pct": 0.010425298442605535,
+    "drift_pct": 0.000145469291924528
+   },
+   "Cd": {
+    "mean": 0.23006791350386,
+    "amp_pct": 0.020918914448794183,
+    "drift_pct": 0.0007505790502015545
+   }
+  },
+  "coeffs_endplate": {
+   "Cl": {
+    "mean": 0.0069279625211336,
+    "amp_pct": 0.1563461467488926,
+    "drift_pct": -0.0049073915362965875
+   },
+   "Cd": {
+    "mean": 0.008951724920757801,
+    "amp_pct": 0.0914600389586911,
+    "drift_pct": 0.001699644099284691
+   }
+  }
+ },
+ "coeffs_ok": true,
+ "compare": {
+  "CL_3D": 2.3067348001574,
+  "CL_exp_fig36b": 2.63,
+  "rel_diff_pct": -12.291452465498098,
+  "Cl_2D_dataset": 4.279126
+ },
+ "projection": {
+  "hours_per_case": 1.5130000000000001,
+  "cases_per_day": 15.862524785194976,
+  "days_for_20_cases": 1.2608333333333335,
+  "days_for_80_cases": 5.043333333333334,
+  "days_for_160_cases": 10.086666666666668,
+  "days_for_400_cases": 25.21666666666667
+ }
+}
+report: ../../../data/frontwing_runs3d/zerihan3d_L0_h0.211_np6_20261103T150218Z/report3d.json, ../../../data/frontwing_runs3d/zerihan3d_L0_h0.211_np6_20261103T150218Z/report3d.png

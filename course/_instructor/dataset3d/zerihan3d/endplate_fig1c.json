@@ -1,0 +1,20 @@
+{
+ "scale_px_per_mm_y_fit": 1.646351557238508,
+ "scale_px_per_mm_endplate": 1.6175,
+ "rms_px": 0.8725840545718008,
+ "endplate_x_front_mm": -3.086568804154575,
+ "endplate_x_rear_mm": 396.9134311958455,
+ "endplate_y_top_mm": 140.44509959935036,
+ "endplate_y_bottom_mm": -29.87896036295417,
+ "endplate_len_mm_from_fig": 400.00000000000006,
+ "endplate_h_mm_from_fig": 170.32405996230452,
+ "wing_lowest_y_mm": -17.34707453928524,
+ "main_le_mm": [
+  0.018999692685129355,
+  0.018999516403758222
+ ],
+ "flap_te_mm": [
+  367.4410000000106,
+  91.789
+ ]
+}

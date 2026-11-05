@@ -1,0 +1,52 @@
+#!/bin/bash
+# 3D trial: mesh + solve, timing every step. Runs INSIDE the OpenFOAM container, in the case directory.
+# Usage: ./Allrun [NP]        (NP = MPI ranks, default from system/decomposeParDict)
+set -o pipefail
+cd "${0%/*}" || exit 1
+: "${WM_PROJECT_DIR:?OpenFOAM environment not loaded}"
+
+# self-contained helpers (no dependency on bin/tools/RunFunctions, missing in some packagings)
+runApplication() { local app=$1; shift; "$app" "$@" > "log.$app" 2>&1; }
+runParallel()    { local app=$1; shift; mpirun ${FW3D_MPIRUN_OPTS:-} -np "$NP" "$app" -parallel "$@" > "log.$app" 2>&1; }   # FW3D_MPIRUN_OPTS: e.g. "--bind-to none" on shared cluster nodes
+restore0Dir()    { local d; for d in processor*; do rm -rf "$d/0"; cp -r 0.orig "$d/0"; done; }
+
+NP=${1:-$(foamDictionary -entry numberOfSubdomains -value system/decomposeParDict)}
+if [ "$NP" != "$(foamDictionary -entry numberOfSubdomains -value system/decomposeParDict)" ]; then
+    NZ=1; for d in $(seq 1 "$NP"); do [ $((d * d)) -le "$NP" ] && [ $((NP % d)) -eq 0 ] && NZ=$d; done
+    foamDictionary -entry numberOfSubdomains -set "$NP" system/decomposeParDict > /dev/null
+    foamDictionary -entry coeffs/n -set "($((NP / NZ)) 1 $NZ)" system/decomposeParDict > /dev/null
+fi
+echo "OpenFOAM $WM_PROJECT_VERSION, $NP ranks, $(env -u OMP_NUM_THREADS nproc) cpus visible" | tee log.Allrun
+
+# --- memory monitor: total RSS (MB) of this user's processes, every 5 s -----------------------------
+# (only our uid: under apptainer /proc shows the whole shared node; under podman everything is uid 0)
+( while true; do
+    rss=$(awk -v me="$(id -u)" '/^Uid:/ {u = $2} /^VmRSS/ && u == me {s += $2} END {print int(s/1024)}' /proc/[0-9]*/status 2>/dev/null)
+    echo "$(date +%s) $rss"; sleep 5
+  done ) > mem.log 2>/dev/null &
+MON=$!
+trap 'kill $MON 2>/dev/null' EXIT
+
+T0=$(date +%s.%N)
+step() {   # step <name> <command...>: run, time, stop on failure
+    local name=$1; shift
+    local t=$(date +%s.%N)
+    "$@"; local rc=$?
+    local dt=$(awk -v a="$(date +%s.%N)" -v b="$t" 'BEGIN {printf "%.1f", a - b}')
+    echo "$name $dt $rc" >> timings.txt
+    echo "[$(date +%T)] $name: ${dt%.*} s (rc $rc)" | tee -a log.Allrun
+    [ $rc -eq 0 ] || { echo "FAILED at $name, see log.$name" | tee -a log.Allrun; exit $rc; }
+}
+: > timings.txt
+
+step surfaceFeatureExtract  runApplication surfaceFeatureExtract
+step blockMesh              runApplication blockMesh
+step decomposePar           runApplication decomposePar -force
+step snappyHexMesh          runParallel snappyHexMesh -overwrite
+step checkMesh              runParallel checkMesh -constant
+step restore0Dir            restore0Dir
+# uniform initial field (as in the 2D pipeline): a potentialFoam start gave "Interpolated velocity error = 8.3"
+# and diverged within 30 iterations on the smoke mesh (v1912, 03/11)
+step simpleFoam             runParallel simpleFoam ${FW3D_SOLVER_OPTS:-}   # FW3D_SOLVER_OPTS=-noFunctionObjects only for the v1912 check
+echo "total $(awk -v a="$(date +%s.%N)" -v b="$T0" 'BEGIN {printf "%.1f", a - b}') 0" >> timings.txt
+echo "[$(date +%T)] done" | tee -a log.Allrun

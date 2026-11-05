@@ -1,0 +1,27 @@
+# Zerihan (2001) Fig. 36b, datum flap, alpha nominal 1 deg: CL (downforce, full wing with endplates, balance) vs h/c.
+# Digitised 03/11/2026 from the thesis PDF (page 135, 200 dpi, rotated -90 deg): filled-square markers found by
+# morphological opening; axes calibrated on the major ticks (x: 102.2 px per 0.1 h/c, y: 393 px per 1.0 CL).
+# Reading uncertainty ~ +-0.01 in h/c and +-0.01 in CL. The thesis text gives the peak exactly: CL 3.028 at h/c 0.079.
+h_over_c,CL
+0.045,2.560
+0.0555,2.649
+0.0656,2.665
+0.0714,2.995
+0.079,3.028
+0.092,3.004
+0.098,2.990
+0.106,2.962
+0.119,2.919
+0.132,2.883
+0.159,2.800
+0.184,2.713
+0.211,2.636
+0.224,2.616
+0.237,2.664
+0.251,2.596
+0.263,2.537
+0.290,2.420
+0.316,2.326
+0.342,2.242
+0.395,2.120
+0.593,1.865

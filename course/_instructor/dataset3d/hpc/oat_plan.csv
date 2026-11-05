@@ -1,0 +1,38 @@
+idx,case_id,param,value,shape_json,dz_mm,dpitch_deg,keep_fields
+1,base,baseline,0,{},0,0,1
+2,rot_flap2_lo,rot_flap2,-6,"{""rot_flap2"": -6}",0,0,0
+3,rot_flap2_hi,rot_flap2,6,"{""rot_flap2"": 6}",0,0,0
+4,rot_flap1_lo,rot_flap1,-6,"{""rot_flap1"": -6}",0,0,0
+5,rot_flap1_hi,rot_flap1,6,"{""rot_flap1"": 6}",0,0,0
+6,twist_flap2_lo,twist_flap2,-4,"{""twist_flap2"": -4}",0,0,0
+7,twist_flap2_hi,twist_flap2,4,"{""twist_flap2"": 4}",0,0,0
+8,twist_flap1_lo,twist_flap1,-4,"{""twist_flap1"": -4}",0,0,0
+9,twist_flap1_hi,twist_flap1,4,"{""twist_flap1"": 4}",0,0,0
+10,camber_main_lo,camber_main,-2,"{""camber_main"": -2}",0,0,0
+11,camber_main_hi,camber_main,2,"{""camber_main"": 2}",0,0,0
+12,camber_flap1_lo,camber_flap1,-2,"{""camber_flap1"": -2}",0,0,0
+13,camber_flap1_hi,camber_flap1,2,"{""camber_flap1"": 2}",0,0,0
+14,camber_flap2_lo,camber_flap2,-2,"{""camber_flap2"": -2}",0,0,0
+15,camber_flap2_hi,camber_flap2,2,"{""camber_flap2"": 2}",0,0,0
+16,camber2_main_lo,camber2_main,-1.5,"{""camber2_main"": -1.5}",0,0,0
+17,camber2_main_hi,camber2_main,1.5,"{""camber2_main"": 1.5}",0,0,0
+18,camber2_flap1_lo,camber2_flap1,-1.5,"{""camber2_flap1"": -1.5}",0,0,0
+19,camber2_flap1_hi,camber2_flap1,1.5,"{""camber2_flap1"": 1.5}",0,0,0
+20,camber2_flap2_lo,camber2_flap2,-1.5,"{""camber2_flap2"": -1.5}",0,0,0
+21,camber2_flap2_hi,camber2_flap2,1.5,"{""camber2_flap2"": 1.5}",0,0,0
+22,thick_main_lo,thick_main,0.85,"{""thick_main"": 0.85}",0,0,0
+23,thick_main_hi,thick_main,1.15,"{""thick_main"": 1.15}",0,0,0
+24,thick_flap1_lo,thick_flap1,0.85,"{""thick_flap1"": 0.85}",0,0,0
+25,thick_flap1_hi,thick_flap1,1.15,"{""thick_flap1"": 1.15}",0,0,0
+26,thick_flap2_lo,thick_flap2,0.85,"{""thick_flap2"": 0.85}",0,0,0
+27,thick_flap2_hi,thick_flap2,1.15,"{""thick_flap2"": 1.15}",0,0,0
+28,chord_flap2_lo,chord_flap2,0.9,"{""chord_flap2"": 0.9}",0,0,0
+29,chord_flap2_hi,chord_flap2,1.1,"{""chord_flap2"": 1.1}",0,0,0
+30,gap_flap2_lo,gap_flap2,-1.5,"{""gap_flap2"": -1.5}",0,0,0
+31,gap_flap2_hi,gap_flap2,2.0,"{""gap_flap2"": 2.0}",0,0,0
+32,overlap_flap2_lo,overlap_flap2,-4,"{""overlap_flap2"": -4}",0,0,0
+33,overlap_flap2_hi,overlap_flap2,4,"{""overlap_flap2"": 4}",0,0,0
+34,dz_mm_lo,dz_mm,-40.0,{},-40.0,0,0
+35,dz_mm_hi,dz_mm,60.0,{},60.0,0,0
+36,dpitch_deg_lo,dpitch_deg,-1.0,{},0,-1.0,0
+37,dpitch_deg_hi,dpitch_deg,1.0,{},0,1.0,0

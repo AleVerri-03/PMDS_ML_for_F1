@@ -1,0 +1,41 @@
+Bootstrap: docker
+From: opencfd/openfoam-run@sha256:0b0892f2fadbf5602f8fad8f8e507a81b6995863c7b021886a58ddce099e7a77
+
+# IFW 3D kit on a cluster: the pinned OpenFOAM v2606 runtime image (same digest as the laptop,
+# dataset/pipeline_versions.env) + the Python side (gmsh for STEP -> STL, numpy/scipy/matplotlib for
+# deformation, autostop and reports) in /opt/venv. One .sif runs everything, no podman.
+# Same recipe as dataset/hpc/leonardo/frontwing.def (Leonardo, shelved), copied here so that the branch
+# hpc-ifw is self-contained.
+#
+# Build (route A of hpc/setup_cluster.sh; needs --fakeroot or root and internet on the login node):
+#     apptainer build --fakeroot ifw_v2606.sif ifw_v2606.def
+# If fakeroot is not allowed, setup_cluster.sh falls back to route B: `apptainer pull` of the bare
+# OpenFOAM image + a host Python venv.
+
+%post
+    set -eu
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    # python3 + venv; X/GL libraries that the gmsh pip wheel links against even when headless
+    apt-get install -y --no-install-recommends python3 python3-venv \
+        libglu1-mesa libxcursor1 libxinerama1 libxft2 libxrender1 libxfixes3
+    rm -rf /var/lib/apt/lists/*
+    python3 -m venv /opt/venv
+    /opt/venv/bin/pip install --no-cache-dir \
+        gmsh==4.15.2 numpy==2.5.4 scipy==1.18.1 pandas==3.0.6 matplotlib==3.11.2
+    /opt/venv/bin/python -c "import gmsh, numpy, scipy, matplotlib; print('python side OK')"
+
+%environment
+    export OMPI_ALLOW_RUN_AS_ROOT=1
+    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+    export OPENBLAS_CORETYPE=Haswell
+    export MPLBACKEND=Agg
+
+%runscript
+    . /usr/lib/openfoam/openfoam2606/etc/bashrc
+    exec "$@"
+
+%labels
+    pipeline ifw3d
+    openfoam v2606
+    gmsh 4.15.2
