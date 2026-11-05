@@ -1,0 +1,34 @@
+{
+ "params": {
+  "d_main_deg": 0.0,
+  "d_flap1_deg": 0.0,
+  "d_flap2_deg": -4.0,
+  "dz_mm": 0.0,
+  "dpitch_deg": 0.0,
+  "blend_mm": 100.0
+ },
+ "checks": {
+  "slot_main_flap1_mm": {
+   "before": 8.202772754355015,
+   "after": 8.202772754355015
+  },
+  "slot_flap1_flap2_mm": {
+   "before": 4.481041867484066,
+   "after": 3.9475141077989644
+  }
+ },
+ "geometry_before_operating": {
+  "h_te_m": 0.08897124435423998,
+  "h_te_over_c": 0.3558849774169599,
+  "pitch_deg": 1.090999523399715,
+  "z_min_m": 0.0794622612504344
+ },
+ "geometry": {
+  "h_te_m": 0.08897124435423998,
+  "h_te_over_c": 0.3558849774169599,
+  "pitch_deg": 1.090999523399715,
+  "z_min_m": 0.0794622612504344
+ },
+ "valid": true,
+ "max_node_displacement_mm": 9.089879268600457
+}
