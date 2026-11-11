@@ -23,12 +23,13 @@ in the Python or OpenFOAM files.
 
 ## Step 0: clone the branch
 
-The user gives you the repository URL. If `git clone` asks for credentials, stop and ask the user. They set
+If `git clone` asks for credentials, stop and ask the user. They set
 up the SSH key or token themselves; never handle tokens.
 
 ```bash
 cd ~                                   # or the directory the user indicates
-git clone -b hpc-ifw --single-branch <REPO_URL> F1-Front-Wing-Physics-Informed-NN
+git clone --depth 1 -b hpc-ifw --single-branch https://github.com/AleVerri-03/PMDS_ML_for_F1.git F1-Front-Wing-Physics-Informed-NN
+# about 200 MB: the branch carries the STL of the wing
 cd F1-Front-Wing-Physics-Informed-NN/course/_instructor/dataset3d/hpc
 ls                                     # expect: AGENT_INSTRUCTIONS.md lib.sh setup_cluster.sh run_case_hpc.sh oat_*.{py,sh,sbatch} ifw_v2606.def oat_plan.csv
 ls ../../../../imperial/ifw.stp        # the CAD (4.5 MB) must be there
@@ -56,6 +57,7 @@ Use the scratch/work area, not a small `$HOME`. If modules are needed (e.g. `mod
 them too:
 ```bash
 export FW3D_HOME=/path/to/scratch/$USER/fw3d      # physical path with enough quota
+export FW3D_STL=$(cd ../../../../imperial/stl && pwd -P)   # the STL are already in the branch (see step 4)
 export FW3D_MODULES="apptainer"                     # only if apptainer comes from a module; else leave unset
 ```
 These are saved into `fw3d.env` by the next step.
@@ -88,6 +90,9 @@ Check: it prints `python in .sif OK` or `host venv OK`, and `fw3d.env` has `FW3D
 ```bash
 bash setup_cluster.sh geometry
 ```
+The branch `hpc-ifw` already contains the laptop STL in `imperial/stl/`. With `FW3D_STL` pointing there
+(step 1), this step only checks them and must print `wing.stl identical to the laptop one (ae3d2579)`.
+No gmsh and no rsync are needed. The two cases below apply only if those files are missing.
 - With gmsh (`FW3D_HAS_GMSH=1`): it tessellates `imperial/ifw.stp` (about 5 min, 2-3 GB RAM), then classifies
   the wing elements. If the login node kills it (out of memory or CPU limit), run the same step on a
   compute node:
@@ -205,10 +210,28 @@ The case `base_L0_np6` keeps its fields for ParaView (`processor*` directories).
 Re-running a single row: `sbatch --array=<idx> ... oat_array.sbatch oat_plan.csv` (a non-`done` case is
 moved aside to `<case>.old_<time>` and redone).
 
-## No SLURM?
+## PBS clusters (e.g. the Polimi cluster, queue `cpu`): use `oat_array.pbs` instead of `oat_array.sbatch`
 
-If `probe.txt` shows **PBS** (`qsub`), tell the user. The sbatch file must be translated (`#PBS -l
-select=1:ncpus=6:mem=16gb`, `$PBS_ARRAY_INDEX` instead of `$SLURM_ARRAY_TASK_ID`). Do this only with their OK.
+Steps 1-5 and 9 are unchanged. Steps 6-8 and the monitoring become (always from `hpc/`):
+```bash
+# step 6, smoke (two separate single-row jobs: PBS refuses 1-element arrays)
+qsub -v IDX=1,LEVEL=smoke,CAMPAIGN=smoke -l walltime=01:00:00 oat_array.pbs
+qsub -v IDX=3,LEVEL=smoke,CAMPAIGN=smoke -l walltime=01:00:00 oat_array.pbs
+# step 7, baseline gate at L0
+qsub -v IDX=1 oat_array.pbs
+# step 8, the rest of the campaign, at most 8 cases at once
+qsub -J 2-37%8 oat_array.pbs        # if "%8" is rejected: report, do NOT submit without the limit unasked
+# monitoring
+qstat -u $USER                      # jobs; arrays appear as <id>[] ; add -t to list the subjobs
+qstat -xf <jobid> | grep -E "job_state|Exit_status|resources_used"   # a finished job
+```
+- Queue `cpu`, no account (`-A`) unless `qsub` refuses: then ask the user.
+- The job output files are `ifw-oat.o<jobid>[.<index>]` in `hpc/`; in step 6 read those instead of
+  `logs/ifw-oat_*`. The smoke cases are in `$FW3D_RUNS/smoke/*_smoke_np6`.
+- In the failure table, `sacct` becomes `qstat -xf <jobid>`. More memory or time for one row:
+  `qsub -v IDX=<row> -l select=1:ncpus=6:mem=24gb -l walltime=12:00:00 oat_array.pbs`.
+- The login node has one core: do not run `oat_plan.py --check` there. With the STL of the branch
+  (sha256 `ae3d2579`) it is not needed, because the 37 rows were checked on the same files on 05/11/2026.
 
 If there is **no scheduler** and the user confirms that you may run on a compute server directly:
 ```bash

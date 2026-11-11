@@ -12,6 +12,7 @@ esegue sul cluster è in **AGENT_INSTRUCTIONS.md** (in inglese, scritta per l'ag
 | `oat_plan.py`, `oat_plan.csv` | Il piano: baseline più 18 parametri × {basso, alto}. Con `--check` verifica la validità geometrica (37/37 il 05/11/2026). |
 | `run_case_hpc.sh` | Un caso: deformazione → caso → Allrun nel .sif con il watcher di autostop → report. Si può rilanciare: i casi già finiti vengono saltati. |
 | `oat_array.sbatch` | Job array SLURM (6 core, 16 GB, 8 h per caso). |
+| `oat_array.pbs` | Lo stesso per PBS (cluster del Politecnico, coda `cpu`). |
 | `oat_local.sh` | Lo stesso senza scheduler. |
 | `oat_collect.py` | Tabella dei risultati e classifica (`oat_ranking.md/.csv/.png`). |
 

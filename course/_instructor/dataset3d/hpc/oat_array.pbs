@@ -1,0 +1,27 @@
+#!/bin/bash
+# PBS twin of oat_array.sbatch: one subjob = one row of the plan = one IFW case (6 MPI ranks on one node).
+# Submit from the hpc/ directory of the clone, AFTER setup_cluster.sh:
+#
+#   qsub -J 2-37%8 oat_array.pbs                                   # array, at most 8 cases at once
+#   qsub -v IDX=1 oat_array.pbs                                    # one row (PBS refuses 1-element arrays)
+#   qsub -v IDX=1,LEVEL=smoke,CAMPAIGN=smoke -l walltime=01:00:00 oat_array.pbs   # smoke test of row 1
+#
+# If this PBS version rejects "%8" in -J, submit without it (all subjobs may then start at once).
+# Variables (qsub -v): PLAN (oat_plan.csv), IDX (single row), LEVEL, CAMPAIGN, NP (default = ncpus).
+# Output: ifw-oat.o<jobid>[.<index>] in the submit directory; the case logs are in the case directory.
+#PBS -N ifw-oat
+#PBS -q cpu
+#PBS -l select=1:ncpus=6:mem=16gb
+#PBS -l walltime=08:00:00
+#PBS -j oe
+
+set -uo pipefail
+cd "${PBS_O_WORKDIR:?not under PBS}"
+ROW=${PBS_ARRAY_INDEX:-${IDX:?give -J for an array or -v IDX=<row>}}
+export LEVEL=${LEVEL:-L0} CAMPAIGN=${CAMPAIGN:-oat_v1}
+export NP=${NP:-${NCPUS:-6}}
+echo "row $ROW on $(hostname), job ${PBS_JOBID:-}, ncpus ${NCPUS:-?}, start $(date -Is)"
+bash ./run_case_hpc.sh "${PLAN:-oat_plan.csv}" "$ROW"
+rc=$?
+echo "end $(date -Is), rc $rc"
+exit $rc

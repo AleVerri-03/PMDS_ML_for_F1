@@ -62,7 +62,7 @@ echo running > "$CASE/STATUS"
     echo "case_id $CASE_ID"; echo "param $PARAM"; echo "value $VALUE"; echo "shape_json $SHAPE_JSON"
     echo "dz_mm $DZ_MM"; echo "dpitch_deg $DPITCH_DEG"
     echo "host $(hostname)"; echo "cpu $(lscpu | sed -n 's/^Model name: *//p' | head -1)"; echo "nproc $(env -u OMP_NUM_THREADS nproc)"
-    echo "mem_total_GB $(free -g | awk '/^Mem/ {print $2}')"; echo "slurm_job ${SLURM_JOB_ID:-} ${SLURM_ARRAY_JOB_ID:-}_${SLURM_ARRAY_TASK_ID:-}"
+    echo "mem_total_GB $(free -g | awk '/^Mem/ {print $2}')"; echo "batch_job ${SLURM_JOB_ID:-}${PBS_JOBID:-} ${SLURM_ARRAY_TASK_ID:-}${PBS_ARRAY_INDEX:-}"
     echo "foam $FW3D_FOAM ${FW3D_SIF:-$FW3D_FOAM_BASHRC}"; echo "started_utc $(date -u +%FT%TZ)"
 } > "$CASE/platform.txt"
 
