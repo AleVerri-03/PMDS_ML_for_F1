@@ -95,10 +95,15 @@ def main():
             # curvature check: the two half-effects of a linear response are equal
             rec["nonlinear"] = abs(rec["dCL_hi_pct"] + rec["dCL_lo_pct"]) > 0.5 * max(abs(rec["dCL_pct"]), noise)
             rec["resolved"] = abs(rec["dCL_pct"]) > noise or abs(rec["dCD_pct"]) > 2 * noise
+            # largest deviation from the baseline: the right measure when the baseline sits near an optimum
+            # (h/c, flap angles: both ends LOSE downforce, so hi - lo underestimates the parameter)
+            rec["maxdCL_pct"] = max(abs(rec["dCL_lo_pct"]), abs(rec["dCL_hi_pct"]))
+            rec["maxdCD_pct"] = max(abs(rec["dCD_lo_pct"]), abs(rec["dCD_hi_pct"]))
+            rec["unsteady"] = ",".join(e for e, c in (("lo", lo), ("hi", hi)) if c["CL_amp_pct"] > 1) or "-"
         rank.append(rec)
-    rank.sort(key=lambda r: -abs(r["dCL_pct"]) if "dCL_pct" in r else float("inf"))
+    rank.sort(key=lambda r: -r["maxdCL_pct"] if "maxdCL_pct" in r else float("inf"))
     keys = ["param", "lo", "hi", "status", "dCL_pct", "dCD_pct", "dLD_pct", "dCL_lo_pct", "dCL_hi_pct", "dCD_lo_pct",
-            "dCD_hi_pct", "nonlinear", "resolved"]
+            "dCD_hi_pct", "maxdCL_pct", "maxdCD_pct", "nonlinear", "resolved", "unsteady"]
     with open(a.campaign / "oat_ranking.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys, extrasaction="ignore")
         w.writeheader()
@@ -108,13 +113,13 @@ def main():
           f"Baseline: CL {base['CL']:.4f}, CD {base['CD']:.4f}, L/D {base['LD']:.3f}. Cases done {n_done}/{len(rows)}. "
           f"Noise floor on CL (2 x median half-amplitude): {noise:.2f} %. Unsteady cases (CL half-amplitude > 1 %): "
           f"{', '.join(r['case_id'] for r in rows if ok(r) and r['CL_amp_pct'] > 1) or 'none'}.", "",
-          "Effects = high end minus low end, % of the baseline. Sorted by |dCL|.", "",
-          "| # | parameter | range | dCL % | dCD % | d(L/D) % | lo / hi dCL % | resolved | nonlinear | status |",
-          "|---|---|---|---|---|---|---|---|---|---|"]
+          "Effects = high end minus low end, % of the baseline. Sorted by max|dCL| = the largest change of CL at either end.", "",
+          "| # | parameter | range | max dCL % | lo / hi dCL % | hi-lo dCL % | hi-lo dCD % | hi-lo d(L/D) % | resolved | nonlinear | unsteady | status |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for i, r in enumerate(rank, 1):
-        md.append(f"| {i} | {r['param']} | {r['lo']} .. {r['hi']} | {fmt(r.get('dCL_pct'))} | {fmt(r.get('dCD_pct'))} | "
-                  f"{fmt(r.get('dLD_pct'))} | {fmt(r.get('dCL_lo_pct'))} / {fmt(r.get('dCL_hi_pct'))} | "
-                  f"{fmt(r.get('resolved'))} | {fmt(r.get('nonlinear'))} | {r['status']} |")
+        md.append(f"| {i} | {r['param']} | {r['lo']} .. {r['hi']} | {fmt(r.get('maxdCL_pct'))} | "
+                  f"{fmt(r.get('dCL_lo_pct'))} / {fmt(r.get('dCL_hi_pct'))} | {fmt(r.get('dCL_pct'))} | {fmt(r.get('dCD_pct'))} | "
+                  f"{fmt(r.get('dLD_pct'))} | {fmt(r.get('resolved'))} | {fmt(r.get('nonlinear'))} | {r.get('unsteady', '-')} | {r['status']} |")
     (a.campaign / "oat_ranking.md").write_text("\n".join(md) + "\n")
     print("\n".join(md))
     try:

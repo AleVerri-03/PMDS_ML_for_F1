@@ -8,7 +8,11 @@ cd "${0%/*}" || exit 1
 # self-contained helpers (no dependency on bin/tools/RunFunctions, missing in some packagings)
 runApplication() { local app=$1; shift; "$app" "$@" > "log.$app" 2>&1; }
 runParallel()    { local app=$1; shift; mpirun ${FW3D_MPIRUN_OPTS:-} -np "$NP" "$app" -parallel "$@" > "log.$app" 2>&1; }   # FW3D_MPIRUN_OPTS: e.g. "--bind-to none" on shared cluster nodes
-restore0Dir()    { local d; for d in processor*; do rm -rf "$d/0"; cp -r 0.orig "$d/0"; done; }
+# restore0Dir: copy the CONTENT of 0.orig into processor*/0. "cp -r 0.orig dir/0" nests 0.orig inside 0 when the
+# rm did not remove it (seen twice on the Polimi /work filesystem, 12/11/2026: processorN/0/0.orig, no p);
+# then check that every rank has the fields.
+restore0Dir()    { local d; for d in processor*; do rm -rf "$d/0"; mkdir -p "$d/0" && cp -r 0.orig/. "$d/0/" || return 1
+                   [ -f "$d/0/p" ] && [ -f "$d/0/U" ] || { echo "restore0Dir: no fields in $d/0" >&2; return 1; }; done; }
 
 NP=${1:-$(foamDictionary -entry numberOfSubdomains -value system/decomposeParDict)}
 if [ "$NP" != "$(foamDictionary -entry numberOfSubdomains -value system/decomposeParDict)" ]; then
