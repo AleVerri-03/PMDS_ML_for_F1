@@ -121,6 +121,46 @@ L'obiettivo è misurare la classifica d'importanza dei parametri invece di stima
 - **Costo atteso:** circa 37 × 7 core-h, cioè circa 260 core-h. Con 8 casi alla volta servono circa 6-8 h.
 - **Uscita:** `oat_ranking.md/.png`, cioè l'effetto (estremo alto meno estremo basso) su CL, CD e L/D in % della baseline, con la soglia di rumore data dall'oscillazione residua.
 
+### Risultati (cluster Polimi, coda PBS `cpu`, 11-13/11/2026)
+
+**Esecuzione:**
+- 37/37 casi `done`, ciascuno su 6 rank in Apptainer.
+- Il container è l'immagine OpenFOAM v2606 nuda (rotta B), con Python sull'host.
+- Due casi (`thick_flap1_lo`, `gap_flap2_lo`) erano falliti per una copia annidata in `restore0Dir` sul filesystem `/work`. Corretto in `Allrun` e rilanciati.
+
+**Riproducibilità:** la baseline sul cluster è identica a quella del portatile: 2,170,474 celle, CL 5.3896, CD 0.5939. L'autostop si ferma come "oscillating" a 1300 iterazioni.
+
+**Costo:**
+- 92 min per caso su 6 core, cioè circa 9 core-h; 3.8 s/iterazione a 2.17 M celle.
+- Picco di memoria 5.1 GB.
+- Circa 330 core-h per l'intera campagna.
+
+**Classifica per variazione massima di CL a uno dei due estremi** (in % della baseline; tra parentesi l'estremo basso / alto):
+
+| # | parametro | intervallo | max \|dCL\| | basso / alto | note |
+|---|---|---|---|---|---|
+| 1 | h/c (`dz_mm`) | −40 .. +60 mm | 28.3 | −28.3 / −21.3 | massimo vicino alla baseline (h/c 0.36); h/c 0.2 instazionario |
+| 2 | `camber2_main` | −1.5 .. 1.5 | 18.8 | −1.9 / −18.8 | estremo alto instazionario, probabile separazione |
+| 3 | `rot_flap1` | ±6° | 16.8 | −16.8 / −6.3 | ottimo vicino a 0°; +6° instazionario |
+| 4 | `rot_flap2` | ±6° | 12.7 | −12.7 / +9.1 | quasi lineare; i due estremi arrivano a 3000 iterazioni |
+| 5 | beccheggio | ±1° | 7.7 | −7.7 / +6.5 | lineare |
+| 6 | `twist_flap1` | ±4° | 4.9 | −4.9 / +4.0 | lineare |
+| 7 | `twist_flap2` | ±4° | 3.6 | −3.6 / +3.0 | lineare |
+| 8 | `camber_main` | ±2 | 2.7 | −2.7 / −0.2 | |
+| 9 | `camber_flap2` | ±2 | 1.9 | −1.9 / +1.2 | |
+| 10 | `chord_flap2` | 0.9 .. 1.1 | 1.6 | −1.6 / +1.6 | |
+| 11 | `camber2_flap2` | ±1.5 | 1.4 | +1.3 / −1.4 | |
+| 12–18 | `camber2_flap1`, `gap_flap2`, `camber_flap1`, `overlap_flap2`, `thick_main`, `thick_flap2`, `thick_flap1` | | 0.1–0.9 | | sotto o vicino al rumore |
+
+**Lettura:**
+- **Classifica attesa:** confermata nelle linee generali: h/c, angoli dei flap e beccheggio davanti, spessori trascurabili.
+- **Sorprese:** lo svergolamento dei flap conta più di gap e overlap. La posizione della curvatura del main conta molto, ma solo perché all'estremo alto il flusso separa.
+- **"Alto meno basso" non basta:** per h/c e `rot_flap1` la baseline sta vicino a un ottimo, quindi entrambi gli estremi perdono carico e la differenza alto meno basso sottostima il parametro. Per questo la classifica usa la variazione massima.
+- **Rumore:** il rumore dovuto al rifare la mesh è circa 0.2–0.4 % su CL (`thick_main` dà −0.25 / −0.22). È più dell'oscillazione residua (0.15 %): effetti sotto lo 0.5 % non sono distinguibili.
+- **Casi lenti o instazionari:** i casi arrivati a 3000 iterazioni o instazionari si concentrano agli estremi degli intervalli. Per il dataset gli intervalli vanno ristretti, altrimenti costano il doppio e danno etichette rumorose.
+
+**Proposta per il dataset (8 parametri, intervalli da fissare dalle storie di convergenza):** h/c, beccheggio, `rot_flap1`, `rot_flap2`, `twist_flap1`, `twist_flap2`, `camber_main`, `camber2_main` con l'estremo alto ridotto. Si stimano circa 10–11 core-h per caso, cioè circa 11.000 core-h per 1000 casi.
+
 ## Limiti dichiarati
 
 - Leggi di parete con y⁺ circa 30–150 contro lo strato limite risolto dell'iLES. Flusso a Re 2,2·10⁵ trattato come completamente turbolento.

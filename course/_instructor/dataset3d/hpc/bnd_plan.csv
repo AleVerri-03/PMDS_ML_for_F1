@@ -1,0 +1,9 @@
+idx,case_id,param,value,shape_json,dz_mm,dpitch_deg,keep_fields
+1,base,baseline,0,{},0,0,1
+2,dz_mm_m10,dz_mm,-10,{},-10,0,0
+3,dz_mm_m20,dz_mm,-20,{},-20,0,0
+4,dz_mm_m30,dz_mm,-30,{},-30,0,0
+5,rot_flap1_p2,rot_flap1,2,"{""rot_flap1"": 2}",0,0,0
+6,rot_flap1_p4,rot_flap1,4,"{""rot_flap1"": 4}",0,0,0
+7,camber2_main_p05,camber2_main,0.5,"{""camber2_main"": 0.5}",0,0,0
+8,camber2_main_p10,camber2_main,1.0,"{""camber2_main"": 1.0}",0,0,0
