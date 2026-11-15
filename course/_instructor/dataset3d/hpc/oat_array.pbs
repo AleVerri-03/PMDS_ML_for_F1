@@ -7,7 +7,8 @@
 #   qsub -v IDX=1,LEVEL=smoke,CAMPAIGN=smoke -l walltime=01:00:00 oat_array.pbs   # smoke test of row 1
 #
 # If this PBS version rejects "%8" in -J, submit without it (all subjobs may then start at once).
-# Variables (qsub -v): PLAN (oat_plan.csv), IDX (single row), LEVEL, CAMPAIGN, NP (default = ncpus).
+# Variables (qsub -v): PLAN (oat_plan.csv), IDX (single row), ROWS_FILE (list of rows, one per subjob: used by
+# submit_spread.sh), LEVEL, CAMPAIGN, NP (default = ncpus).
 # Output: ifw-oat.o<jobid>[.<index>] in the submit directory; the case logs are in the case directory.
 #PBS -N ifw-oat
 #PBS -q cpu
@@ -17,7 +18,11 @@
 
 set -uo pipefail
 cd "${PBS_O_WORKDIR:?not under PBS}"
-ROW=${PBS_ARRAY_INDEX:-${IDX:?give -J for an array or -v IDX=<row>}}
+if [ -n "${ROWS_FILE:-}" ] && [ -n "${PBS_ARRAY_INDEX:-}" ]; then
+    ROW=$(sed -n "${PBS_ARRAY_INDEX}p" "$ROWS_FILE")      # submit_spread.sh: subjob k -> k-th row of the list
+else
+    ROW=${PBS_ARRAY_INDEX:-${IDX:?give -J for an array or -v IDX=<row>}}
+fi
 export LEVEL=${LEVEL:-L0} CAMPAIGN=${CAMPAIGN:-oat_v1}
 export NP=${NP:-${NCPUS:-6}}
 echo "row $ROW on $(hostname), job ${PBS_JOBID:-}, ncpus ${NCPUS:-?}, start $(date -Is)"

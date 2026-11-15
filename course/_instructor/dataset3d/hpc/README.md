@@ -13,6 +13,10 @@ esegue sul cluster è in **AGENT_INSTRUCTIONS.md** (in inglese, scritta per l'ag
 | `run_case_hpc.sh` | Un caso: deformazione → caso → Allrun nel .sif con il watcher di autostop → report. Si può rilanciare: i casi già finiti vengono saltati. |
 | `oat_array.sbatch` | Job array SLURM (6 core, 16 GB, 8 h per caso). |
 | `oat_array.pbs` | Lo stesso per PBS (cluster del Politecnico, coda `cpu`). |
+| `bnd_plan.csv` | Controllo dei bordi degli intervalli (7 casi). |
+| `dataset_plan.py`, `ds_plan.csv` | Piano del dataset: 8 parametri, Sobol, 1024 casi (i primi 32 sono il pilota). |
+| `submit_spread.sh` | Distribuisce le righe di un piano sui nodi (un array PBS per nodo). |
+| `ds_collect.py` | Tabella del dataset, qualità di ogni caso, costo e proiezione. |
 | `oat_local.sh` | Lo stesso senza scheduler. |
 | `oat_collect.py` | Tabella dei risultati e classifica (`oat_ranking.md/.csv/.png`). |
 

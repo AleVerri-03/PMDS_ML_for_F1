@@ -159,7 +159,44 @@ L'obiettivo è misurare la classifica d'importanza dei parametri invece di stima
 - **Rumore:** il rumore dovuto al rifare la mesh è circa 0.2–0.4 % su CL (`thick_main` dà −0.25 / −0.22). È più dell'oscillazione residua (0.15 %): effetti sotto lo 0.5 % non sono distinguibili.
 - **Casi lenti o instazionari:** i casi arrivati a 3000 iterazioni o instazionari si concentrano agli estremi degli intervalli. Per il dataset gli intervalli vanno ristretti, altrimenti costano il doppio e danno etichette rumorose.
 
-**Proposta per il dataset (8 parametri, intervalli da fissare dalle storie di convergenza):** h/c, beccheggio, `rot_flap1`, `rot_flap2`, `twist_flap1`, `twist_flap2`, `camber_main`, `camber2_main` con l'estremo alto ridotto. Si stimano circa 10–11 core-h per caso, cioè circa 11.000 core-h per 1000 casi.
+**Controllo dei bordi (`hpc/bnd_plan.csv`, 7 casi, 13-15/11/2026)** (CL in % della baseline):
+
+| caso | CL | esito |
+|---|---|---|
+| `dz_mm` −10 | +5.1 % | a regime |
+| `dz_mm` −20 | +9.6 % | a regime; è il massimo della curva, con un calo transitorio verso l'iterazione 300 |
+| `dz_mm` −30 | −24 % | instazionario ±3.6 %: c'è un salto netto tra −20 e −30 mm |
+| `rot_flap1` +2° | +4.8 % | a regime |
+| `rot_flap1` +4° | +7.9 % | arriva a 3000 iterazioni, con una deriva lenta di ±0.8 % e nessuno stallo |
+| `rot_flap1` +6° | — | in stallo dopo circa 850 iterazioni (dato della campagna OAT) |
+| `camber2_main` +0.5 | −1.0 % | a regime |
+| `camber2_main` +1.0 | −13 % | instazionario ±2.8 % |
+
+A `rot_flap2` ±6° le storie mostrano CL fermo (−6°) o con una deriva lenta di ±0.5 % (+6°). L'autostop non si ferma solo perché CD è più rumoroso della soglia.
+
+**Distribuzione dei job sul cluster:**
+- PBS ha messo tutti i 37 casi OAT su cpu01. Con 6-8 casi insieme, un caso va a 5-9 s/iterazione invece di 3.8 (banda di memoria del nodo, 2 × Xeon Gold 6238R).
+- PBS non riserva i core: ogni job vede tutti i 112 core logici.
+- Per il dataset i job vanno distribuiti sui nodi cpu01-05 con `hpc/submit_spread.sh`.
+
+**Piano del dataset (`hpc/dataset_plan.py`, `hpc/ds_plan.csv`):**
+- 8 parametri, campionati insieme con una sequenza Sobol (seed 20261115), 1024 casi.
+- I primi 32 casi sono il pilota e restano nel dataset.
+
+| parametro | intervallo | motivo |
+|---|---|---|
+| `dz_mm` | −15 … +60 mm (h/c 0.296–0.596) | margine dal salto tra −20 e −30 |
+| `dpitch_deg` | ±1° | |
+| `rot_flap1` | −6° … +3° | margine dalla deriva lenta a +4° e dallo stallo a +6° |
+| `rot_flap2` | ±6° | |
+| `twist_flap1` | ±4° | |
+| `twist_flap2` | ±4° | |
+| `camber_main` | ±2 | |
+| `camber2_main` | −1.5 … +0.5 | |
+
+**Validità geometrica:** 32/32 per il pilota.
+
+**Raccolta:** `hpc/ds_collect.py` classifica ogni caso come steady, slow (deriva lenta) o unsteady, e stima il costo per 1024 casi.
 
 ## Limiti dichiarati
 
