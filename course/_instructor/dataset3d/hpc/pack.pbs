@@ -1,0 +1,22 @@
+#!/bin/bash
+# One PBS job = several IFW cases at once on one node (SLOTS cases x 6 MPI ranks), taken from a list of rows.
+# Reason (pilot ds_pilot, 16/11/2026): the queue allows only 4 running jobs per user (max_user_run = 4) but up to
+# 28 cores per job, so 4 jobs x 4 cases = 16 cases at once. Every case keeps its own 6-rank decomposition, as in
+# all the previous campaigns. Submitted by submit_pack.sh; subjob k processes rows file <ROWS_PREFIX>.blk<k>.txt.
+#PBS -N ifw-pack
+#PBS -q cpu
+#PBS -l select=1:ncpus=24:mem=32gb
+#PBS -l walltime=16:00:00
+#PBS -j oe
+
+set -uo pipefail
+cd "${PBS_O_WORKDIR:?not under PBS}"
+F=${ROWS_PREFIX:?}.blk${PBS_ARRAY_INDEX:-${BLK:?}}.txt
+export PLAN=${PLAN:-ds_plan.csv} LEVEL=${LEVEL:-L0} CAMPAIGN=${CAMPAIGN:-ds_v1} NP=6
+[ -n "${CLEAN:-}" ] && export CLEAN
+SLOTS=${SLOTS:-4}
+mkdir -p logs
+echo "block $F on $(hostname), job ${PBS_JOBID:-}, $SLOTS slots, rows: $(tr '\n' ' ' < "$F"), start $(date -Is)"
+xargs -a "$F" -P "$SLOTS" -I{} bash -c \
+    'bash ./run_case_hpc.sh "$PLAN" {} > "logs/${CAMPAIGN}_row{}.out" 2>&1; echo "row {}: rc $? $(date -Is)"'
+echo "end $(date -Is)"

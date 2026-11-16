@@ -5,9 +5,9 @@ numbers that decide the full run (stable fraction, iterations, cost).
 
 Writes into campaign_dir: ds_results.csv (8 inputs + CL, CD, quality flags, cost per case) and ds_summary.md.
 Quality class of a finished case:
-  steady      autostop 'converged' or 'oscillating' (CL half-amplitude <= 0.25 %): a clean label;
-  slow        reached the iteration cap with CL half-amplitude <= 1 % (slow wander, usable with an error bar);
-  unsteady    CL half-amplitude > 1 % (separation; the mean CL is not a regime value).
+  steady      autostop 'converged', 'oscillating' or 'wander' (conv3d-v2): a regime value (wander: +-0.4 %);
+  slow        reached the iteration cap with CL half-amplitude <= 1 % (should not happen with conv3d-v2);
+  unsteady    autostop 'unsteady' or CL half-amplitude > 1 % (separation; the mean CL is not a regime value).
 """
 from __future__ import annotations
 
@@ -27,9 +27,9 @@ INPUTS = ["dz_mm", "dpitch_deg", "rot_flap1", "rot_flap2", "twist_flap1", "twist
 def quality(r: dict) -> str:
     if r.get("status") != "done" or "CL" not in r:
         return "-"
-    if r["CL_amp_pct"] > 1:
+    if r.get("autostop") == "unsteady" or r["CL_amp_pct"] > 1:
         return "unsteady"
-    return "steady" if r.get("autostop") in ("converged", "oscillating") else "slow"
+    return "steady" if r.get("autostop") in ("converged", "oscillating", "wander") else "slow"
 
 
 def main():

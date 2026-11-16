@@ -23,6 +23,19 @@ Bounded oscillation (v1, the 2D "oscillating" class): CL drift <= 5e-4 |CL|, CD 
 When the rule holds, endTime is set to k in system/controlDict (re-read by the running solver): the state at
 k is on disk whatever the solver did beyond k. The decision is written to autostop.json.
 
+v2 (16/11/2026, pilot of the IFW dataset): 9 of 32 pilot cases ran to the 3000-iteration cap. In 7 of them CL
+was already within +-0.25 % of its final value at iteration 1000: a low-frequency wander (period > WINDOW)
+broke the window-to-window drift test. Two classes are added, checked only when v1 does not stop:
+  "wander"   k >= 1000; over the last 3 windows: half spread of the window means <= 0.25 % (CL), 0.5 % (CD);
+             linear trend over the 600 iterations <= 0.25 % (CL), 0.5 % (CD); CL half amplitude <= 1 % in the
+             last window; residuals >= 2.3 orders. The mean of the last window is the label, +-0.4 % (replay on
+             the pilot, OAT and boundary cases: error vs the 2500-3000 mean <= 0.36 % in CL inside the dataset
+             ranges; s0013, a real slow transient of 12 %, is still held until 2900).
+  "unsteady" k >= 2000; CL half amplitude (linear trend removed) > 1 % in each of the last 3 windows: separated
+             flow, the label is not a regime value; stopped to save the remaining iterations. A slow transient
+             (s0013, +12 % between iterations 1000 and 2500, then steady) is a trend and is not flagged.
+Replay on the pilot: 34 % fewer iterations.
+
 Usage: python autostop3d.py <case> [--watch]   (without --watch: replay on the finished history)
 """
 from __future__ import annotations
@@ -35,7 +48,7 @@ from pathlib import Path
 
 import numpy as np
 
-RECIPE = "conv3d-v1"
+RECIPE = "conv3d-v2"
 CHECK_EVERY = 100
 MIN_ITERS = 600
 WINDOW = 200            # replay on the L0 trial: stop at 1300, CL within 0.003 % of the value at 2504
@@ -49,6 +62,14 @@ OSC_DRIFT_CL_REL = 5e-4  # window means of an oscillating signal wander: IFW L0 
                          # but window-to-window drift 1.1-2.4e-4
 OSC_HOLD = 3            # consecutive checkpoints (300 iterations)
 RESID_ORDERS_OSC = 2.5  # as the 2D class B (oscillating, usable with declared uncertainty): residuals >= 2.5 orders
+# v2 (16/11/2026, from the pilot ds_pilot): two more classes, checked only when v1 has not stopped
+WANDER_FROM = 1000      # slow low-frequency wander (period > WINDOW): no trend over 3 windows
+WANDER_NW, WANDER_DEV_CL, WANDER_DEV_CD = 3, 2.5e-3, 5e-3      # half spread of the 3 window means
+WANDER_TREND_CL, WANDER_TREND_CD = 2.5e-3, 5e-3                 # |linear trend| over the 3 windows
+WANDER_AMP_CL = 1e-2    # half amplitude of CL over the last window
+RESID_ORDERS_WANDER = 2.3
+UNSTEADY_FROM = 2000    # separated flow: CL half amplitude > 1 % over the last 3 windows -> stop, flag it
+UNSTEADY_AMP_CL = 1e-2
 
 
 def _table(path: Path) -> tuple[list[str], np.ndarray]:
@@ -126,8 +147,44 @@ def evaluate(it, cl, cd, res, k: int) -> dict:
     return out
 
 
+def evaluate_v2(it, cl, cd, res, k: int) -> str | None:
+    """v2 classes on the history up to k: 'wander' (window means flat, no trend, CL half amplitude <= 1 %,
+    residuals >= 2.3 orders) or 'unsteady' (CL half amplitude > 1 % in each of the last 3 windows, k >= 2000)."""
+    if k < WANDER_FROM:
+        return None
+    m = it <= k
+    it, cl, cd = it[m], cl[m], cd[m]
+    segs = [(k - (j + 1) * WINDOW, k - j * WINDOW) for j in range(WANDER_NW)]
+    sel = [(it > a) & (it <= b) for a, b in segs]
+    if any(s.sum() < 10 for s in sel):
+        return None
+    amps = [(cl[s].max() - cl[s].min()) / 2 / abs(cl[s].mean()) for s in sel]
+
+    def amp_detrended(s):        # a slow transient (s0013: +12 % over 1500 iterations) is a trend, not unsteadiness
+        r = cl[s] - np.polyval(np.polyfit(it[s], cl[s], 1), it[s])
+        return (r.max() - r.min()) / 2 / abs(cl[s].mean())
+    if k >= UNSTEADY_FROM and min(amp_detrended(s) for s in sel) > UNSTEADY_AMP_CL:
+        return "unsteady"
+    clm = np.array([cl[s].mean() for s in sel])
+    cdm = np.array([cd[s].mean() for s in sel])
+    w = it > k - WANDER_NW * WINDOW
+    span = WANDER_NW * WINDOW
+    tr_cl = np.polyfit(it[w], cl[w], 1)[0] * span / abs(clm.mean())
+    tr_cd = np.polyfit(it[w], cd[w], 1)[0] * span / abs(cdm.mean())
+    drops = []
+    for name, (ri, rv) in res.items():
+        rv = rv[ri <= k]
+        if name != "omega" and len(rv) > 2 * RESID_REF_ITERS:
+            drops.append(np.log10(rv[:RESID_REF_ITERS].max() / max(rv[-RESID_REF_ITERS:].max(), 1e-300)))
+    ok = (np.ptp(clm) / 2 / abs(clm.mean()) <= WANDER_DEV_CL and np.ptp(cdm) / 2 / abs(cdm.mean()) <= WANDER_DEV_CD
+          and abs(tr_cl) <= WANDER_TREND_CL and abs(tr_cd) <= WANDER_TREND_CD and amps[0] <= WANDER_AMP_CL
+          and bool(drops) and min(drops) >= RESID_ORDERS_WANDER)
+    return "wander" if ok else None
+
+
 def decide(it, cl, cd, res, ks) -> dict | None:
-    """First checkpoint in ks where the case may stop: converged, or bounded oscillation held OSC_HOLD times."""
+    """First checkpoint in ks where the case may stop: converged, bounded oscillation held OSC_HOLD times
+    (v1), then (v2) slow wander without trend, or a clearly unsteady (separated) flow."""
     held = 0
     for k in ks:
         v = evaluate(it, cl, cd, res, k)
@@ -136,6 +193,11 @@ def decide(it, cl, cd, res, ks) -> dict | None:
             return v
         if held >= OSC_HOLD:
             v.update(stop=True, flag="oscillating", osc_held_checks=held)
+            return v
+        f2 = evaluate_v2(it, cl, cd, res, k)
+        if f2:
+            w = (it > k - WINDOW) & (it <= k)
+            v.update(stop=True, flag=f2, CL=float(cl[w].mean()), CD=float(cd[w].mean()))
             return v
     return None
 

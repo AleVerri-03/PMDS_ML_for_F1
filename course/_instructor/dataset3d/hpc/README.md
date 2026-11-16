@@ -16,6 +16,7 @@ esegue sul cluster è in **AGENT_INSTRUCTIONS.md** (in inglese, scritta per l'ag
 | `bnd_plan.csv` | Controllo dei bordi degli intervalli (7 casi). |
 | `dataset_plan.py`, `ds_plan.csv` | Piano del dataset: 8 parametri, Sobol, 1024 casi (i primi 32 sono il pilota). |
 | `submit_spread.sh` | Distribuisce le righe di un piano sui nodi (un array PBS per nodo). |
+| `pack.pbs`, `submit_pack.sh` | Più casi per job (4 × 6 rank su 24 core): la coda ammette solo 4 job in esecuzione per utente. |
 | `ds_collect.py` | Tabella del dataset, qualità di ogni caso, costo e proiezione. |
 | `oat_local.sh` | Lo stesso senza scheduler. |
 | `oat_collect.py` | Tabella dei risultati e classifica (`oat_ranking.md/.csv/.png`). |

@@ -198,6 +198,24 @@ A `rot_flap2` ±6° le storie mostrano CL fermo (−6°) o con una deriva lenta 
 
 **Raccolta:** `hpc/ds_collect.py` classifica ogni caso come steady, slow (deriva lenta) o unsteady, e stima il costo per 1024 casi.
 
+**Pilota (righe 1-32, 15-16/11/2026):**
+- 32/32 casi `done`: 23 stazionari, 8 lenti (arrivati a 3000 iterazioni), 1 instazionario (s0005: h/c 0.30 con flap 1 a +2.5°).
+- Costo medio 15.8 core-h per caso, 4.8 s/iterazione (mediana).
+- La coda `cpu` ammette solo 4 job in esecuzione per utente (`max_user_run = 4`). Con un caso per job, 1024 casi richiederebbero circa 28 giorni.
+
+**Autostop conv3d-v2:**
+- In 7 degli 8 casi lenti CL era già entro ±0.25 % dal valore finale all'iterazione 1000. La deriva lenta, con periodo più lungo della finestra, faceva fallire il test di deriva di v1.
+- v2 aggiunge due classi:
+  - **"wander":** medie di 3 finestre ferme, nessuna tendenza, ampiezza di CL ≤ 1 %;
+  - **"unsteady":** dall'iterazione 2000, ampiezza di CL senza tendenza > 1 %.
+- Riprova su 76 casi (pilota, OAT, bordi):
+  - errore su CL ≤ 0.36 % dentro gli intervalli del dataset;
+  - il transitorio lento di s0013 (+12 %) viene atteso fino a 2900 iterazioni;
+  - 36 % di iterazioni in meno sul pilota.
+- Costo stimato: 10.6 core-h per caso, circa 10.800 core-h per 1024 casi.
+
+**Impacchettamento:** con `hpc/pack.pbs` un job da 24 core fa girare 4 casi da 6 rank, ognuno con la stessa decomposizione di sempre. 4 job per 4 casi danno 16 casi alla volta, cioè circa 5 giorni per 1024 casi.
+
 ## Limiti dichiarati
 
 - Leggi di parete con y⁺ circa 30–150 contro lo strato limite risolto dell'iLES. Flusso a Re 2,2·10⁵ trattato come completamente turbolento.
